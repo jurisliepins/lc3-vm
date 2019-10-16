@@ -14,7 +14,8 @@
         | R_R6    = 6
         | R_R7    = 7
         | R_PC    = 8
-        | R_COUNT = 9
+        | R_COND  = 9
+        | R_COUNT = 10
 
     type OpcodeTypes = 
         | OP_BR   = 0
@@ -77,6 +78,28 @@
             reader.ReadUInt16() |> swapUInt16
         else 
             reader.ReadUInt16()
+    // Used in debugging only!
+    let rec printArray (array: array<uint16>) (lowerBound: int) (upperBound: int) =
+            match lowerBound with
+            | _ when (lowerBound + 3 < upperBound) -> 
+                printf "%5d "   array.[lowerBound]
+                printf "%5d "   array.[lowerBound + 1]
+                printf "%5d "   array.[lowerBound + 2]
+                printf "%5d \n" array.[lowerBound + 3]
+                printArray array (lowerBound + 4) upperBound
+            | _ when (lowerBound + 2 < upperBound) -> 
+                printf "%5d "   array.[lowerBound]
+                printf "%5d "   array.[lowerBound + 1]
+                printf "%5d \n" array.[lowerBound + 2]
+                printArray array (lowerBound + 3) upperBound
+            | _ when (lowerBound + 1 < upperBound) -> 
+                printf "%5d "   array.[lowerBound]
+                printf "%5d \n" array.[lowerBound + 1]
+                printArray array (lowerBound + 2) upperBound
+            | _ when (lowerBound < upperBound) -> 
+                printf "%A \n" array.[lowerBound]
+                printArray array (lowerBound + 1) upperBound
+            | _ -> ()
 
     //
     type Memory = array<uint16>
@@ -129,56 +152,93 @@
         member public this.GetRegister(addr: uint16) = registers.[int addr]
         member public this.SetRegister(addr: uint16, value: uint16) = registers.[int addr] <- value
 
+        member public this.UpdateConditionFlags(r: uint16) = 
+            match this.GetRegister(r) with
+            | value when (value = 0us)          -> this.SetRegister(uint16 RegisterTypes.R_COUNT, uint16 ConditionFlagTypes.FL_ZRO)
+            | value when ((value >>> 15) > 0us) -> this.SetRegister(uint16 RegisterTypes.R_COUNT, uint16 ConditionFlagTypes.FL_NEG)
+            | _                                 -> this.SetRegister(uint16 RegisterTypes.R_COUNT, uint16 ConditionFlagTypes.FL_POS)
+
         member public this.Load(filename: string) =
             use reader = new BinaryReader(File.Open(filename, FileMode.Open, FileAccess.Read, FileShare.Read))
             
-            let mutable memoryPtr: uint16 = readUInt16 reader
+            let origin = readUInt16 reader
+
+            let mutable memoryPtr: uint16 = origin
 
             while ((reader.BaseStream.Position <> reader.BaseStream.Length) && (memoryPtr < UInt16.MaxValue)) do
                 this.Memory.[int memoryPtr] <- readUInt16 reader
                 memoryPtr <- memoryPtr + 1us
+
+            //printArray this.Memory (int origin) (int memoryPtr)
     //
-    //let rec evalLoop() =
-    //    let instruction = VirtualMachine.Instance.MemoryRead VirtualMachine.Instance.ProgramCounterWithIncrement
+    let rec evalLoop (vm: VirtualMachine) =
+        let instruction = vm.MemoryRead vm.ProgramCounterWithIncrement
         
-    //    match (enum<OpcodeTypes> (int (unpackOp instruction))) with 
-    //    | OP_BR   -> evalLoop ()
-    //    | OP_ADD  -> evalAnd instruction
-    //    | OP_LD   -> evalLoop ()
-    //    | OP_ST   -> evalLoop ()
-    //    | OP_JSR  -> evalLoop ()
-    //    | OP_AND  -> evalLoop ()
-    //    | OP_LDR  -> evalLoop ()
-    //    | OP_STR  -> evalLoop ()
-    //    | OP_RTI  -> evalLoop ()
-    //    | OP_NOT  -> evalLoop ()
-    //    | OP_LDI  -> evalLoop ()
-    //    | OP_STI  -> evalLoop ()
-    //    | OP_JMP  -> evalLoop ()
-    //    | OP_RES  -> evalLoop ()
-    //    | OP_LEA  -> evalLoop ()
-    //    | OP_TRAP -> evalLoop ()
-    //and evalAnd (instruction: uint16) =
-    //    let dr = unpackDr instruction
-    //    let sr1 = unpackSr1 instruction
+        match (enum<OpcodeTypes> (int (unpackOp instruction))) with 
+        | OP_BR   -> evalLoop vm
+        | OP_ADD  -> evalOpAdd vm instruction
+        | OP_LD   -> evalLoop vm
+        | OP_ST   -> evalLoop vm
+        | OP_JSR  -> evalLoop vm
+        | OP_AND  -> evalLoop vm
+        | OP_LDR  -> evalLoop vm
+        | OP_STR  -> evalLoop vm
+        | OP_RTI  -> evalLoop vm
+        | OP_NOT  -> evalLoop vm
+        | OP_LDI  -> evalLoop vm
+        | OP_STI  -> evalLoop vm
+        | OP_JMP  -> evalLoop vm
+        | OP_RES  -> evalLoop vm
+        | OP_LEA  -> evalLoop vm
+        | OP_TRAP -> evalLoop vm
+    and evalOpAdd (vm: VirtualMachine) (instruction: uint16) =
+        let dr = unpackDr instruction
+        let sr1 = unpackSr1 instruction
 
-    //    let imm = unpackImm instruction
+        let imm = unpackImm instruction
 
-    //    match imm with 
-    //    | 0us -> 
-    //        let sr2 = unpackSr2 instruction
-    //        VirtualMachine.Instance.SetRegister(
-    //            dr, (VirtualMachine.Instance.GetRegister(sr1) + VirtualMachine.Instance.GetRegister(sr2)))
-    //    | 1us ->
-    //        let immValue = signExtend (instruction &&& 0x1Fus) 5
-    //        VirtualMachine.Instance.SetRegister(
-    //            dr, (VirtualMachine.Instance.GetRegister(sr1) + immValue))
-    //    | _ -> 
-    //        raise (LC3VirtualMachineException("Unexpected value for the immediate flag"))
+        match imm with 
+        | 0us -> 
+            let sr2 = unpackSr2 instruction
+            VirtualMachine.Instance.SetRegister(
+                dr, (VirtualMachine.Instance.GetRegister(sr1) + VirtualMachine.Instance.GetRegister(sr2)))
+            VirtualMachine.Instance.UpdateConditionFlags(dr)
+            evalLoop vm
+        | 1us ->
+            let immValue = signExtend (instruction &&& 0x1Fus) 5
+            VirtualMachine.Instance.SetRegister(
+                dr, (VirtualMachine.Instance.GetRegister(sr1) + immValue))
+            VirtualMachine.Instance.UpdateConditionFlags(dr)
+            evalLoop vm
+        | _ -> 
+            raise (LC3VirtualMachineException("Unexpected value for the immediate flag"))
+    and evalOpAnd (vm: VirtualMachine) (instruction: uint16) =
+        let dr = unpackDr instruction
+        let sr1 = unpackSr1 instruction
+
+        let imm = unpackImm instruction
+
+        match imm with 
+        | 0us -> 
+            let sr2 = unpackSr2 instruction
+            VirtualMachine.Instance.SetRegister(
+                dr, (VirtualMachine.Instance.GetRegister(sr1) &&& VirtualMachine.Instance.GetRegister(sr2)))
+            VirtualMachine.Instance.UpdateConditionFlags(dr)
+            evalLoop vm
+        | 1us ->
+            let immValue = signExtend (instruction &&& 0x1Fus) 5
+            VirtualMachine.Instance.SetRegister(
+                dr, (VirtualMachine.Instance.GetRegister(sr1) &&& immValue))
+            VirtualMachine.Instance.UpdateConditionFlags(dr)
+            evalLoop vm
+        | _ -> 
+            raise (LC3VirtualMachineException("Unexpected value for the immediate flag"))
 
     [<EntryPoint>]
     let main argv =
         VirtualMachine.Instance.ProgramCounter <- 0x3000us
         VirtualMachine.Instance.Load("C:\\Users\\Yuris Liepins\\Projects\\lc3-vm\\images\\2048.obj")
+
+        evalLoop VirtualMachine.Instance
 
         0
