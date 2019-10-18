@@ -4,6 +4,18 @@
 
     exception LC3VirtualMachineException of string
 
+    let inline unexpectedValueException (arg: string) = 
+        LC3VirtualMachineException("Unexpected value '" + arg + "'")
+
+    let inline badOpcodeException (arg: string) = 
+        LC3VirtualMachineException("Bad opcode '" + arg + "'")
+
+    let inline unknownOpcodeException (arg: string) =
+        LC3VirtualMachineException("Unknown opcode '" + arg + "'")
+
+    let inline unknownTrapcodeException (arg: string) =
+        LC3VirtualMachineException("Unknown trapcode '" + arg + "'")
+
     type RegisterTypes = 
         | R_R0    = 0
         | R_R1    = 1
@@ -44,7 +56,7 @@
         | MR_KBSR = 0xFE00
         | MR_KBDR = 0xFE02
 
-    type TrapCodeTypes = 
+    type TrapcodeTypes = 
         | TRAP_GETC  = 0x20
         | TRAP_OUT   = 0x21
         | TRAP_PUTS  = 0x22
@@ -62,6 +74,10 @@
     let unpackSr2 (instruction: uint16) = (instruction &&& 0x7us)
     
     let unpackImm (instruction: uint16) = (instruction >>> 5) &&& 0x1us
+
+    let unpackLong (instruction: uint16) = (instruction >>> 11) &&& 1us
+
+    let unpackTrap (instruction: uint16) = (instruction &&& 0xFFus)
 
     let signExtend (value: uint16) (bitCount: int) = 
         if ((value >>> (bitCount - 1)) &&& 1us) > 0us then
@@ -141,23 +157,23 @@
         member public this.Memory with get() = memory
         member public this.Registers with get() = registers
 
-        member public this.RegisterRead(addr: uint16) = (regread this.Registers addr)
-        member public this.RegisterWrite(addr: uint16, value: uint16) = (regwrite this.Registers addr value)
+        member public this.ReadRegister(addr: uint16) = (regread this.Registers addr)
+        member public this.WriteRegister(addr: uint16, value: uint16) = (regwrite this.Registers addr value)
 
-        member public this.MemoryRead(addr: uint16) = (memread this.Memory addr)
-        member public this.MemoryWrite(addr: uint16, value: uint16) = (memwrite this.Memory addr value)
+        member public this.ReadMemory(addr: uint16) = (memread this.Memory addr)
+        member public this.WriteMemory(addr: uint16, value: uint16) = (memwrite this.Memory addr value)
 
         member public this.ProgramCounter 
-            with get() = this.RegisterRead(uint16 RegisterTypes.R_PC) and set(value: uint16) = this.RegisterWrite(uint16 RegisterTypes.R_PC, value)
+            with get() = this.ReadRegister(uint16 RegisterTypes.R_PC) and set(value: uint16) = this.WriteRegister(uint16 RegisterTypes.R_PC, value)
 
         member public this.ProgramCounterWithIncrement with get() = (regreadpcincr this.Registers)
         member public this.ProgramCounterWithDecrement with get() = (regreadpcdecr this.Registers)
 
         member public this.ConditionFlag 
-            with get() = this.RegisterRead(uint16 RegisterTypes.R_COND) and set(value: uint16) = this.RegisterWrite(uint16 RegisterTypes.R_COND, value)
+            with get() = this.ReadRegister(uint16 RegisterTypes.R_COND) and set(value: uint16) = this.WriteRegister(uint16 RegisterTypes.R_COND, value)
 
         member public this.UpdateConditionFlags(r: uint16) = 
-            match this.RegisterRead(r) with
+            match this.ReadRegister(r) with
             | value when (value = 0us)          -> (this.ConditionFlag <- uint16 ConditionFlagTypes.FL_ZRO)
             | value when ((value >>> 15) > 0us) -> (this.ConditionFlag <- uint16 ConditionFlagTypes.FL_NEG)
             | _                                 -> (this.ConditionFlag <- uint16 ConditionFlagTypes.FL_POS)
@@ -172,83 +188,181 @@
             while ((reader.BaseStream.Position <> reader.BaseStream.Length) && (memoryPtr < UInt16.MaxValue)) do
                 this.Memory.[int memoryPtr] <- readUInt16 reader
                 memoryPtr <- memoryPtr + 1us
+    
     //
     let rec eval (vm: VirtualMachine) =
-        let instruction = vm.MemoryRead vm.ProgramCounterWithIncrement
-        
+        let instruction = vm.ReadMemory vm.ProgramCounterWithIncrement
+
         match (enum<OpcodeTypes> (int (unpackOp instruction))) with 
-        | OP_BR   -> evalOpBr  vm instruction
-        | OP_ADD  -> evalOpAdd vm instruction
-        | OP_LD   -> evalOpLd  vm instruction
-        | OP_ST   -> evalOpSt  vm instruction
-        | OP_JSR  -> eval vm
-        | OP_AND  -> evalOpAnd vm instruction
-        | OP_LDR  -> eval vm
-        | OP_STR  -> eval vm
-        | OP_RTI  -> eval vm
-        | OP_NOT  -> eval vm
-        | OP_LDI  -> eval vm
-        | OP_STI  -> eval vm
-        | OP_JMP  -> eval vm
-        | OP_RES  -> eval vm
-        | OP_LEA  -> eval vm
-        | OP_TRAP -> eval vm
+        | OpcodeTypes.OP_BR   -> evalOpBr   vm instruction
+        | OpcodeTypes.OP_ADD  -> evalOpAdd  vm instruction
+        | OpcodeTypes.OP_LD   -> evalOpLd   vm instruction
+        | OpcodeTypes.OP_ST   -> evalOpSt   vm instruction
+        | OpcodeTypes.OP_JSR  -> evalOpJsr  vm instruction
+        | OpcodeTypes.OP_AND  -> evalOpAnd  vm instruction
+        | OpcodeTypes.OP_LDR  -> evalOpLdr  vm instruction
+        | OpcodeTypes.OP_STR  -> evalOpStr  vm instruction
+        | OpcodeTypes.OP_RTI  -> evalOpRti  vm instruction
+        | OpcodeTypes.OP_NOT  -> evalOpNot  vm instruction
+        | OpcodeTypes.OP_LDI  -> evalOpLdi  vm instruction
+        | OpcodeTypes.OP_STI  -> evalOpSti  vm instruction
+        | OpcodeTypes.OP_JMP  -> evalOpJmp  vm instruction
+        | OpcodeTypes.OP_RES  -> evalOpRes  vm instruction
+        | OpcodeTypes.OP_LEA  -> evalOpLea  vm instruction
+        | OpcodeTypes.OP_TRAP -> evalOpTrap vm instruction
+        | unknownCode ->
+            raise (unknownOpcodeException (unknownCode.ToString()))
     and evalOpBr (vm: VirtualMachine) (instruction: uint16) =
         let condFlag = unpackDr instruction
         let pcOffset = signExtend (instruction &&& 0x1FFus) 9
-        
         if (condFlag &&& vm.ConditionFlag) > 0us then
             vm.ProgramCounter <- (vm.ProgramCounter + pcOffset)
+        eval vm
     and evalOpAdd (vm: VirtualMachine) (instruction: uint16) =
         let dr = unpackDr instruction
         let sr1 = unpackSr1 instruction
-
         let imm = unpackImm instruction
 
         match imm with 
         | 0us -> 
             let sr2 = unpackSr2 instruction
-            vm.RegisterWrite(dr, (vm.RegisterRead(sr1) + vm.RegisterRead(sr2)))
-            vm.UpdateConditionFlags(dr)
-            eval vm
+            vm.WriteRegister(dr, (vm.ReadRegister(sr1) + vm.ReadRegister(sr2)))
         | 1us ->
             let immValue = signExtend (instruction &&& 0x1Fus) 5
-            vm.RegisterWrite(dr, (vm.RegisterRead(sr1) + immValue))
-            vm.UpdateConditionFlags(dr)
-            eval vm
+            vm.WriteRegister(dr, (vm.ReadRegister(sr1) + immValue))
         | _ -> 
-            raise (LC3VirtualMachineException("Unexpected value for the immediate flag"))
+            raise (unexpectedValueException (imm.ToString()))
+        vm.UpdateConditionFlags(dr)
+        eval vm
     and evalOpLd (vm: VirtualMachine) (instruction: uint16) =
         let dr = unpackDr instruction
         let pcOffset = signExtend (instruction &&& 0x1FFus) 9
-        vm.RegisterWrite(dr, vm.MemoryRead(vm.ProgramCounter + pcOffset))
+        vm.WriteRegister(dr, vm.ReadMemory(vm.ProgramCounter + pcOffset))
         vm.UpdateConditionFlags(dr)
         eval vm
     and evalOpSt (vm: VirtualMachine) (instruction: uint16) =
         let sr = unpackDr instruction
         let pcOffset = signExtend (instruction &&& 0x1FFus) 9
-        vm.MemoryWrite(vm.ProgramCounter + pcOffset, vm.RegisterRead(sr))
+        vm.WriteMemory(vm.ProgramCounter + pcOffset, vm.ReadRegister(sr))
+        eval vm
+    and evalOpJsr (vm: VirtualMachine) (instruction: uint16) =
+        let sr1 = unpackSr1 instruction
+        let longPcOffset = signExtend (instruction &&& 0x7FFus) 11
+        
+        vm.WriteRegister(uint16 RegisterTypes.R_R7, vm.ProgramCounter)
+
+        let long = unpackLong instruction
+        match long with
+        | 0us -> vm.ProgramCounter <- vm.ReadRegister(sr1)
+        | 1us -> vm.ProgramCounter <- vm.ProgramCounter + longPcOffset
+        | _ -> 
+            raise (unexpectedValueException (long.ToString()))
         eval vm
     and evalOpAnd (vm: VirtualMachine) (instruction: uint16) =
         let dr = unpackDr instruction
         let sr1 = unpackSr1 instruction
-
         let imm = unpackImm instruction
-
         match imm with 
         | 0us -> 
             let sr2 = unpackSr2 instruction
-            vm.RegisterWrite(dr, (vm.RegisterRead(sr1) &&& vm.RegisterRead(sr2)))
-            vm.UpdateConditionFlags(dr)
-            eval vm
+            vm.WriteRegister(dr, (vm.ReadRegister(sr1) &&& vm.ReadRegister(sr2)))
         | 1us ->
             let immValue = signExtend (instruction &&& 0x1Fus) 5
-            vm.RegisterWrite(dr, (vm.RegisterRead(sr1) &&& immValue))
-            vm.UpdateConditionFlags(dr)
-            eval vm
+            vm.WriteRegister(dr, (vm.ReadRegister(sr1) &&& immValue))
         | _ -> 
-            raise (LC3VirtualMachineException("Unexpected value for the immediate flag"))
-
+            raise (unexpectedValueException (imm.ToString()))
+        vm.UpdateConditionFlags(dr)
+        eval vm
+    and evalOpLdr (vm: VirtualMachine) (instruction: uint16) =
+        let dr = unpackDr instruction
+        let sr1 = unpackSr1 instruction
+        let pcOffset = signExtend (instruction &&& 0x3Fus) 6
+        vm.WriteRegister(dr, vm.ReadMemory(sr1 + pcOffset))
+        vm.UpdateConditionFlags(dr)
+        eval vm
+    and evalOpStr (vm: VirtualMachine) (instruction: uint16) =
+        let dr = unpackDr instruction
+        let sr1 = unpackSr1 instruction
+        let offset = signExtend (instruction &&& 0x3Fus) 6
+        vm.WriteMemory(vm.ReadRegister(sr1) + offset, vm.ReadRegister(dr))
+        eval vm
+    and evalOpRti (_: VirtualMachine) (_: uint16) =
+        raise (badOpcodeException (OpcodeTypes.OP_RTI.ToString()))
+    and evalOpNot (vm: VirtualMachine) (instruction: uint16) =
+        let dr = unpackDr instruction
+        let sr1 = unpackSr1 instruction
+        vm.WriteRegister(dr, ~~~(vm.ReadRegister(sr1)))
+        vm.UpdateConditionFlags(dr)
+        eval vm
+    and evalOpLdi (vm: VirtualMachine) (instruction: uint16) =
+        let dr = unpackDr instruction
+        let pcOffset = signExtend (instruction &&& 0x1FFus) 9
+        vm.WriteRegister(dr, 
+            vm.ReadMemory(
+                vm.ReadMemory(vm.ProgramCounter + pcOffset)))
+        vm.UpdateConditionFlags(dr)
+        eval vm
+    and evalOpSti (vm: VirtualMachine) (instruction: uint16) =
+        let dr = unpackDr instruction
+        let pcOffset = signExtend (instruction &&& 0x1FFus) 9
+        vm.WriteMemory(
+            vm.ReadMemory(vm.ProgramCounter + pcOffset), 
+                vm.ReadRegister(dr))
+        eval vm
+    and evalOpJmp (vm: VirtualMachine) (instruction: uint16) =
+        let sr1 = unpackSr1 instruction
+        vm.ProgramCounter <- vm.ReadRegister(sr1)
+        eval vm
+    and evalOpRes (_: VirtualMachine) (_: uint16) =
+        raise (badOpcodeException (OpcodeTypes.OP_RES.ToString()))
+    and evalOpLea (vm: VirtualMachine) (instruction: uint16) =
+        let dr = unpackDr instruction
+        let pcOffset = signExtend (instruction &&& 0x1FFus) 9
+        vm.WriteRegister(dr, vm.ProgramCounter + pcOffset)
+        vm.UpdateConditionFlags(dr)
+        eval vm
+    and evalOpTrap (vm: VirtualMachine) (instruction: uint16) =
+        match (enum<TrapcodeTypes> (int (unpackTrap instruction))) with 
+        | TrapcodeTypes.TRAP_GETC  -> evalOpTrapGetc  vm instruction
+        | TrapcodeTypes.TRAP_OUT   -> evalOpTrapOut   vm instruction
+        | TrapcodeTypes.TRAP_PUTS  -> evalOpTrapPuts  vm instruction
+        | TrapcodeTypes.TRAP_IN    -> evalOpTrapIn    vm instruction
+        | TrapcodeTypes.TRAP_PUTSP -> evalOpTrapPutsp vm instruction
+        | TrapcodeTypes.TRAP_HALT  -> evalOpTrapHalt  vm instruction
+        | unknownCode -> 
+            raise (unknownTrapcodeException (unknownCode.ToString()))
+    and evalOpTrapGetc (vm: VirtualMachine) (_: uint16) = 
+        vm.WriteRegister(uint16 RegisterTypes.R_R0, uint16 (Console.ReadKey().KeyChar))
+        eval vm
+    and evalOpTrapOut (vm: VirtualMachine) (_: uint16) = 
+        Console.Write(char (vm.ReadRegister(uint16 RegisterTypes.R_R0)))
+        eval vm
+    and evalOpTrapPuts (vm: VirtualMachine) (_: uint16) = 
+        let mutable p = vm.ReadRegister(uint16 RegisterTypes.R_R0)
+        let mutable c = vm.ReadMemory(p)
+        while c <> 0us do
+            Console.Write(char c)
+            p <- p + 1us
+            c <- vm.ReadMemory(p)
+        eval vm
+    and evalOpTrapIn (vm: VirtualMachine) (_: uint16) = 
+        let c = Console.ReadKey()
+        Console.Write(c.KeyChar)
+        vm.WriteRegister(uint16 RegisterTypes.R_R0, uint16 c.KeyChar)
+        eval vm
+    and evalOpTrapPutsp (vm: VirtualMachine) (_: uint16) = 
+        let mutable p = vm.ReadRegister(uint16 RegisterTypes.R_R0)
+        let mutable c = vm.ReadMemory(p)
+        while c <> 0us do
+            let char1 = c &&& 0xFFus;
+            let char2 = c >>> 8;
+            Console.Write(char char1)
+            Console.Write(char char2)
+            p <- p + 1us
+            c <- vm.ReadMemory(p)
+        eval vm
+    and evalOpTrapHalt (_: VirtualMachine) (_: uint16) = 
+        ()
     [<EntryPoint>]
     let main argv =
         VirtualMachine.Instance.ProgramCounter <- 0x3000us
