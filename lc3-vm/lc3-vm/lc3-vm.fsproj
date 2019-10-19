@@ -7,6 +7,12 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Include="LC3VirtualMachineException.fs" />
+    <Compile Include="LC3VirtualMachineTypes.fs" />
+    <Compile Include="LC3Bits.fs" />
+    <Compile Include="LC3VirtualMemory.fs" />
+    <Compile Include="LC3VirtualRegisters.fs" />
+    <Compile Include="LC3VirtualMachine.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>
 
