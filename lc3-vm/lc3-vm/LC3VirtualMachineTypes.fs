@@ -54,21 +54,3 @@ module LC3VirtualMachineTypes =
     type Registers = array<uint16>
 
     type VirtualMachine = (Memory * Registers)
-
-    //let createVirtualMachine () =
-    //    VirtualMachine(
-    //        Array.zeroCreate (int UInt16.MaxValue),
-    //        Array.zeroCreate (int RegisterTypes.R_COUNT))
-
-    //type LC3VirtualMachine() =
-    //    let (memory, registers): VirtualMachine = VirtualMachine.create ()
-    
-    //    static let instance = LC3VirtualMachine()
-
-    //    static member public Instance with get() = instance
-
-    //    member public this.Memory with get() = memory
-    //    member public this.Registers with get() = registers
-
-    //    member public this.ProgramCounter 
-    //        with get() = this.ReadRegister(uint16 RegisterTypes.R_PC) and set(value: uint16) = this.WriteRegister(uint16 RegisterTypes.R_PC, value)
