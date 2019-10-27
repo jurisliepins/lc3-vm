@@ -32,9 +32,21 @@ type LC3VirtualMachine() =
     member public this.ReadRegister (addr: uint16)                = LC3VirtualRegisters.read  registers addr
     member public this.WriteRegister(addr: uint16, value: uint16) = LC3VirtualRegisters.write registers addr value
 
-    member public this.ReadMemory       (addr: uint16)                = LC3VirtualMemory.read       memory addr
-    member public this.ReadMemoryDirect (addr: uint16)                = LC3VirtualMemory.readDirect memory addr
-    member public this.WriteMemory      (addr: uint16, value: uint16) = LC3VirtualMemory.write      memory addr value
+    member public this.ReadMemory       (addr: uint16)                = 
+        let r = LC3VirtualMemory.read       memory addr
+        //if (addr = 12312us) then
+        //    LC3VirtualRegisters.dump registers
+        r
+    member public this.ReadMemoryDirect (addr: uint16)                = 
+        let r = LC3VirtualMemory.readDirect memory addr
+        //if (addr = 12312us) then
+        //    LC3VirtualRegisters.dump registers
+        r
+    member public this.WriteMemory      (addr: uint16, value: uint16) = 
+        let r = LC3VirtualMemory.write      memory addr value
+        //if (addr = 12312us) then
+        //    LC3VirtualRegisters.dump registers
+        r
 
     member public this.UpdateConditionFlags(addr: uint16) = LC3VirtualRegisters.updateConditionFlags registers addr
 
@@ -71,9 +83,11 @@ type LC3VirtualMachine() =
     member public this.ConditionFlag 
         with get() = LC3VirtualRegisters.readConditionFlag registers and set(value: uint16) = LC3VirtualRegisters.writeConditionFlag registers value
 
+    member public this.IsProgramCounterEnd
+        with get() = this.ProgramCounter = uint16 memory.Length
+
 module TrapEvaluator = 
     let inline evalOpTrapGetc (vm: LC3VirtualMachine) (_: uint16) = 
-        //Console.WriteLine("TRAP_GETC")
         vm.R0 <- uint16 (Console.ReadKey(true).KeyChar)
         
     let inline evalOpTrapOut (vm: LC3VirtualMachine) (_: uint16) = 
@@ -90,14 +104,12 @@ module TrapEvaluator =
         Console.Out.Flush()
 
     let inline evalOpTrapIn (vm: LC3VirtualMachine) (_: uint16) = 
-        //Console.WriteLine("TRAP_IN")
         let r = vm.R0
         let c = Console.ReadKey(true).KeyChar
         Console.Out.Write(c)
         vm.WriteRegister(r, uint16 c)
 
     let inline evalOpTrapPutsp (vm: LC3VirtualMachine) (_: uint16) = 
-        //Console.WriteLine("TRAP_PUTSP")
         let mutable p = vm.R0
         let mutable c = vm.ReadMemoryDirect(p)
         while c <> 0us do
@@ -110,7 +122,6 @@ module TrapEvaluator =
         Console.Out.Flush()
     
     let inline evalOpTrapHalt (_: VirtualMachine) (_: uint16) = 
-        //Console.WriteLine("TRAP_HALT")
         Console.Out.Flush()
 
 module OpEvaluator = 
@@ -135,7 +146,7 @@ module OpEvaluator =
 
     let inline evalOpLd (vm: LC3VirtualMachine) (instruction: uint16) =
         let dr = LC3Bits.unpack0 instruction
-        let pcOffset = LC3Bits.signExtend (instruction &&& 0x1FFus) 9
+        let pcOffset = LC3Bits.signExtend (instruction &&& 0x1ffus) 9
         let memValue = vm.ReadMemory(vm.ProgramCounter + pcOffset)
         vm.WriteRegister(dr, memValue)
         vm.UpdateConditionFlags dr
@@ -146,14 +157,24 @@ module OpEvaluator =
         vm.WriteMemory(vm.ProgramCounter + pcOffset, srValue)
 
     let inline evalOpJsr (vm: LC3VirtualMachine) (instruction: uint16) =
-        vm.WriteRegister(uint16 RegisterTypes.R_R7, vm.ProgramCounter)
-        match LC3Bits.unpackLong instruction with
-        | 0us -> 
-            let srValue = vm.ReadRegister(LC3Bits.unpack1 instruction)
-            vm.ProgramCounter <- srValue
-        | _   -> 
-            let longPcOffset = LC3Bits.signExtend (instruction &&& 0x7FFus) 11
+        let sr1 = LC3Bits.unpack1 instruction
+        let longPcOffset = LC3Bits.signExtend (instruction &&& 0x7FFus) 11
+        let longFlag = LC3Bits.unpackLong instruction
+
+        vm.R7 <- vm.ProgramCounter
+
+        if (longFlag <> 0us) then 
             vm.ProgramCounter <- vm.ProgramCounter + longPcOffset
+        else
+            vm.ProgramCounter <- vm.ReadRegister(sr1)
+
+        //match LC3Bits.unpackLong instruction with
+        //| 0us -> 
+        //    let srValue = vm.ReadRegister(LC3Bits.unpack1 instruction)
+        //    vm.ProgramCounter <- srValue
+        //| _   -> 
+        //    let longPcOffset = LC3Bits.signExtend (instruction &&& 0x7FFus) 11
+        //    vm.ProgramCounter <- vm.ProgramCounter + longPcOffset
 
     let inline evalOpAnd (vm: LC3VirtualMachine) (instruction: uint16) =
         let dr = LC3Bits.unpack0 instruction
@@ -170,8 +191,8 @@ module OpEvaluator =
 
     let inline evalOpLdr (vm: LC3VirtualMachine) (instruction: uint16) =
         let dr = LC3Bits.unpack0 instruction
-        let pcOffset = LC3Bits.signExtend (instruction &&& 0x3Fus) 6
         let srValue = vm.ReadRegister(LC3Bits.unpack1 instruction)
+        let pcOffset = LC3Bits.signExtend (instruction &&& 0x3Fus) 6
         let memValue = vm.ReadMemory(srValue + pcOffset)
         vm.WriteRegister(dr, memValue)
         vm.UpdateConditionFlags dr
@@ -200,8 +221,8 @@ module OpEvaluator =
         vm.UpdateConditionFlags dr
 
     let inline evalOpSti (vm: LC3VirtualMachine) (instruction: uint16) =
-        let pcOffset = LC3Bits.signExtend (instruction &&& 0x1FFus) 9
         let srValue = vm.ReadRegister(LC3Bits.unpack0 instruction)
+        let pcOffset = LC3Bits.signExtend (instruction &&& 0x1FFus) 9
         let memValue = vm.ReadMemory(vm.ProgramCounter + pcOffset)
         vm.WriteMemory(memValue, srValue)
 
@@ -229,108 +250,116 @@ module LC3VirtualMachine =
         let instruction = vm.ReadMemory(vm.ProgramCounterWithIncrement)
 
         match (enum<OpcodeTypes> (int (LC3Bits.unpackOp instruction))) with 
-        | OpcodeTypes.OP_BR   -> (**)debug ("OP_BR  "); evalOpBr  vm instruction 
-        | OpcodeTypes.OP_ADD  -> (**)debug ("OP_ADD "); evalOpAdd vm instruction
-        | OpcodeTypes.OP_LD   -> (**)debug ("OP_LD  "); evalOpLd  vm instruction
-        | OpcodeTypes.OP_ST   -> (**)debug ("OP_ST  "); evalOpSt  vm instruction
-        | OpcodeTypes.OP_JSR  -> (**)debug ("OP_JSR "); evalOpJsr vm instruction
-        | OpcodeTypes.OP_AND  -> (**)debug ("OP_AND "); evalOpAnd vm instruction
-        | OpcodeTypes.OP_LDR  -> (**)debug ("OP_LDR "); evalOpLdr vm instruction
-        | OpcodeTypes.OP_STR  -> (**)debug ("OP_STR "); evalOpStr vm instruction
-        | OpcodeTypes.OP_RTI  -> (**)debug ("OP_RTI "); evalOpRti vm instruction
-        | OpcodeTypes.OP_NOT  -> (**)debug ("OP_NOT "); evalOpNot vm instruction
-        | OpcodeTypes.OP_LDI  -> (**)debug ("OP_LDI "); evalOpLdi vm instruction
-        | OpcodeTypes.OP_STI  -> (**)debug ("OP_STI "); evalOpSti vm instruction
-        | OpcodeTypes.OP_JMP  -> (**)debug ("OP_JMP "); evalOpJmp vm instruction
-        | OpcodeTypes.OP_RES  -> (**)debug ("OP_RES "); evalOpRes vm instruction
-        | OpcodeTypes.OP_LEA  -> (**)debug ("OP_LEA "); evalOpLea vm instruction
+        | OpcodeTypes.OP_BR   -> (*debug ("OP_BR  \n");*) evalOpBr  vm instruction 
+        | OpcodeTypes.OP_ADD  -> (*debug ("OP_ADD \n");*) evalOpAdd vm instruction
+        | OpcodeTypes.OP_LD   -> (*debug ("OP_LD  \n");*) evalOpLd  vm instruction
+        | OpcodeTypes.OP_ST   -> (*debug ("OP_ST  \n");*) evalOpSt  vm instruction
+        | OpcodeTypes.OP_JSR  -> (*debug ("OP_JSR \n");*) evalOpJsr vm instruction
+        | OpcodeTypes.OP_AND  -> (*debug ("OP_AND \n");*) evalOpAnd vm instruction
+        | OpcodeTypes.OP_LDR  -> (*debug ("OP_LDR \n");*) evalOpLdr vm instruction
+        | OpcodeTypes.OP_STR  -> (*debug ("OP_STR \n");*) evalOpStr vm instruction
+        //| OpcodeTypes.OP_RTI  -> (*debug ("OP_RTI \n");*) evalOpRti vm instruction
+        | OpcodeTypes.OP_NOT  -> (*debug ("OP_NOT \n");*) evalOpNot vm instruction
+        | OpcodeTypes.OP_LDI  -> (*debug ("OP_LDI \n");*) evalOpLdi vm instruction
+        | OpcodeTypes.OP_STI  -> (*debug ("OP_STI \n");*) evalOpSti vm instruction
+        | OpcodeTypes.OP_JMP  -> (*debug ("OP_JMP \n");*) evalOpJmp vm instruction
+        //| OpcodeTypes.OP_RES  -> (*debug ("OP_RES \n");*) evalOpRes vm instruction
+        | OpcodeTypes.OP_LEA  -> (*debug ("OP_LEA \n");*) evalOpLea vm instruction
         | OpcodeTypes.OP_TRAP -> evalOpTrap vm instruction
         | unknownCode ->
             printf "%A" unknownCode
             //raise (unknownOpcodeException (unknownCode.ToString()))
     and evalOpBr (vm: LC3VirtualMachine) (instruction: uint16) =
         OpEvaluator.evalOpBr vm instruction
-        dumpRegisters vm.VirtualMachine
+        //dumpRegisters vm.VirtualMachine
         eval vm
     and evalOpAdd (vm: LC3VirtualMachine) (instruction: uint16) =
         OpEvaluator.evalOpAdd vm instruction
-        dumpRegisters vm.VirtualMachine
+        //dumpRegisters vm.VirtualMachine
         eval vm
     and evalOpLd (vm: LC3VirtualMachine) (instruction: uint16) =
         OpEvaluator.evalOpLd vm instruction
-        dumpRegisters vm.VirtualMachine
+        //dumpRegisters vm.VirtualMachine
         eval vm
     and evalOpSt (vm: LC3VirtualMachine) (instruction: uint16) =
         OpEvaluator.evalOpSt vm instruction
-        dumpRegisters vm.VirtualMachine
+        //dumpRegisters vm.VirtualMachine
         eval vm
     and evalOpJsr (vm: LC3VirtualMachine) (instruction: uint16) =
         OpEvaluator.evalOpJsr vm instruction
-        dumpRegisters vm.VirtualMachine
+        //dumpRegisters vm.VirtualMachine
         eval vm
     and evalOpAnd (vm: LC3VirtualMachine) (instruction: uint16) =
         OpEvaluator.evalOpAnd vm instruction
-        dumpRegisters vm.VirtualMachine
+        //dumpRegisters vm.VirtualMachine
         eval vm
     and evalOpLdr (vm: LC3VirtualMachine) (instruction: uint16) =
         OpEvaluator.evalOpLdr vm instruction
-        dumpRegisters vm.VirtualMachine
+        //dumpRegisters vm.VirtualMachine
         eval vm
     and evalOpRti (vm: LC3VirtualMachine) (instruction: uint16) =
         OpEvaluator.evalOpRti vm instruction
-        dumpRegisters vm.VirtualMachine
+        //dumpRegisters vm.VirtualMachine
         eval vm
     and evalOpNot (vm: LC3VirtualMachine) (instruction: uint16) =
         OpEvaluator.evalOpNot vm instruction
-        dumpRegisters vm.VirtualMachine
+        //dumpRegisters vm.VirtualMachine
         eval vm
     and evalOpStr (vm: LC3VirtualMachine) (instruction: uint16) =
         OpEvaluator.evalOpStr vm instruction
-        dumpRegisters vm.VirtualMachine
+        //dumpRegisters vm.VirtualMachine
         eval vm
     and evalOpLdi (vm: LC3VirtualMachine) (instruction: uint16) =
         OpEvaluator.evalOpLdi vm instruction
-        dumpRegisters vm.VirtualMachine
+        //dumpRegisters vm.VirtualMachine
         eval vm
     and evalOpSti (vm: LC3VirtualMachine) (instruction: uint16) =
         OpEvaluator.evalOpSti vm instruction
-        dumpRegisters vm.VirtualMachine
+        //dumpRegisters vm.VirtualMachine
         eval vm
     and evalOpJmp (vm: LC3VirtualMachine) (instruction: uint16) =
         OpEvaluator.evalOpJmp vm instruction
-        dumpRegisters vm.VirtualMachine
+        //dumpRegisters vm.VirtualMachine
         eval vm
     and evalOpRes (vm: LC3VirtualMachine) (instruction: uint16) =
         OpEvaluator.evalOpRes vm instruction
-        dumpRegisters vm.VirtualMachine
+        //dumpRegisters vm.VirtualMachine
         eval vm
     and evalOpLea (vm: LC3VirtualMachine) (instruction: uint16) =
         OpEvaluator.evalOpLea vm instruction
-        dumpRegisters vm.VirtualMachine
+        //dumpRegisters vm.VirtualMachine
         eval vm
     and evalOpTrap (vm: LC3VirtualMachine) (instruction: uint16) =
         match (enum<TrapcodeTypes> (int (LC3Bits.unpackTrap instruction))) with 
-        //| TrapcodeTypes.TRAP_GETC -> 
-        //    TrapEvaluator.evalOpTrapGetc vm instruction
-        //    eval vm
+        | TrapcodeTypes.TRAP_GETC -> 
+            //debug ("TRAP_GETC \n")
+            TrapEvaluator.evalOpTrapGetc vm instruction
+            //dumpRegisters vm.VirtualMachine
+            eval vm
         | TrapcodeTypes.TRAP_OUT -> 
-            debug ("TRAP_OUT  ")
+            //debug ("TRAP_OUT  \n")
             TrapEvaluator.evalOpTrapOut vm instruction
-            dumpRegisters vm.VirtualMachine
+            //dumpRegisters vm.VirtualMachine
             eval vm
         | TrapcodeTypes.TRAP_PUTS -> 
-            debug ("TRAP_PUTS ")
+            //debug ("TRAP_PUTS \n")
             TrapEvaluator.evalOpTrapPuts vm instruction
-            dumpRegisters vm.VirtualMachine
+            //dumpRegisters vm.VirtualMachine
             eval vm
-        //| TrapcodeTypes.TRAP_IN -> 
-        //    TrapEvaluator.evalOpTrapIn vm instruction
-        //    eval vm
-        //| TrapcodeTypes.TRAP_PUTSP -> 
-        //    TrapEvaluator.evalOpTrapPutsp vm instruction
-        //    eval vm
-        //| TrapcodeTypes.TRAP_HALT -> 
-        //    TrapEvaluator.evalOpTrapHalt  vm.VirtualMachine instruction
+        | TrapcodeTypes.TRAP_IN -> 
+            //debug ("TRAP_IN  \n")
+            TrapEvaluator.evalOpTrapIn vm instruction
+            //dumpRegisters vm.VirtualMachine
+            eval vm
+        | TrapcodeTypes.TRAP_PUTSP -> 
+            //debug ("TRAP_PUTSP\n")
+            TrapEvaluator.evalOpTrapPutsp vm instruction
+            //dumpRegisters vm.VirtualMachine
+            eval vm
+        | TrapcodeTypes.TRAP_HALT -> 
+            //debug ("TRAP_HALT\n")
+            TrapEvaluator.evalOpTrapHalt vm.VirtualMachine instruction
+            //dumpRegisters vm.VirtualMachine
         | unknownCode -> 
             printf "%A" unknownCode
             //raise (unknownTrapcodeException (unknownCode.ToString()))

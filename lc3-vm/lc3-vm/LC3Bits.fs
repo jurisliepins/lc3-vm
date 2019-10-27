@@ -16,7 +16,7 @@ module LC3Bits =
         
     let inline unpackImm (instruction: uint16) = (instruction >>> 5) &&& 0x1us
     
-    let inline unpackLong (instruction: uint16) = (instruction >>> 11) &&& 1us
+    let inline unpackLong (instruction: uint16) = uint16 ((int instruction >>> 11) &&& 1)
 
     let inline swapUInt16 (value: uint16) = (value <<< 8) ||| (value >>> 8)
 
@@ -24,5 +24,8 @@ module LC3Bits =
         if BitConverter.IsLittleEndian then reader.ReadUInt16() |> swapUInt16 else reader.ReadUInt16()
 
     let inline signExtend (value: uint16) (bitCount: int) = 
-        if ((value >>> (bitCount - 1)) &&& 1us) > 0us then value ||| (0xFFFFus <<< bitCount) else value
+        if ((value >>> (bitCount - 1)) &&& 1us) <> 0us then value ||| (0xFFFFus <<< bitCount) else value
 
+    let inline signExtend2 (value: int) (bitCount: int) : int = 
+        let signBit = 1 <<< (bitCount - 1)
+        (value &&& (signBit - 1)) - (value &&& signBit)

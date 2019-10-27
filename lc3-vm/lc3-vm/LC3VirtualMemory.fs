@@ -5,18 +5,25 @@ module LC3VirtualMemory =
     open lc3vm.LC3VirtualMachineTypes
 
     let inline read (memory: Memory) (addr: uint16) = 
+        //printf "[|r:"
         if ((enum<MemoryMappedRegisterTypes> (int addr)) = MemoryMappedRegisterTypes.MR_KBSR) then
             if Console.KeyAvailable then
                 memory.[int MemoryMappedRegisterTypes.MR_KBSR] <- (1us <<< 15)
                 memory.[int MemoryMappedRegisterTypes.MR_KBDR] <- uint16 (Console.ReadKey(true).KeyChar)
+                //printf "mr_kbsr:%d:" memory.[int MemoryMappedRegisterTypes.MR_KBSR]
+                //printf "mr_kbdr:%d:" memory.[int MemoryMappedRegisterTypes.MR_KBDR]
             else
                 memory.[int MemoryMappedRegisterTypes.MR_KBSR] <- 0us
+                //printf "mr_kbsr:%d:" memory.[int MemoryMappedRegisterTypes.MR_KBSR]
+        //printf "%d:%d|]\n" addr memory.[int addr]
         memory.[int addr]
 
     let inline readDirect (memory: Memory) (addr: uint16) = 
+        //printf "[|r:%d:%d|]\n" addr memory.[int addr]
         memory.[int addr]
     
     let inline write (memory: Memory) (addr: uint16) (value: uint16) = 
+        //printf "[|w:%d:%d|]\n" addr value
         memory.[int addr] <- value
     
     let rec dump (memory: Memory) (lower: uint16) (upper: uint16) =
