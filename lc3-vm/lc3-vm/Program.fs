@@ -8,5 +8,5 @@ let main argv =
         LC3VirtualMachine.load LC3VirtualMachine.Instance "C:\\Users\\Yuris Liepins\\Projects\\lc3-vm\\images\\2048.obj" |> ignore
         LC3VirtualMachine.eval LC3VirtualMachine.Instance
     with
-        | ex -> printfn "%A" (ex.ToString())
+        | ex -> printfn "%A" (ex.StackTrace)
     0
