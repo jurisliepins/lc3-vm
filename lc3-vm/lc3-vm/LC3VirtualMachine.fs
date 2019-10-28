@@ -122,7 +122,7 @@ module OpEvaluator =
         let r1 = LC3Bits.unpack6 instruction
         let r1Value = vm.ReadRegister(r1)
         if (LC3Bits.unpackImm instruction) <> 0us then
-            let immValue = LC3Bits.signExtend (uint16 (int instruction &&& 0x1F)) 5
+            let immValue = LC3Bits.signExtend (instruction &&& 0x1Fus) 5
             vm.WriteRegister(r0, r1Value + immValue)
         else 
             let r2 = LC3Bits.unpack0 instruction
@@ -133,7 +133,7 @@ module OpEvaluator =
     /// Opcode - Load
     let inline evalOpLd (vm: LC3VirtualMachine) (instruction: uint16) =
         let r0 = LC3Bits.unpack9 instruction
-        let offset = LC3Bits.signExtend (uint16 (int instruction &&& 0x1FF)) 9
+        let offset = LC3Bits.signExtend (instruction &&& 0x1FFus) 9
         vm.WriteRegister(r0, vm.ReadMemory(vm.ProgramCounter + offset))
         vm.UpdateConditionFlags(r0)
 
@@ -141,15 +141,14 @@ module OpEvaluator =
     let inline evalOpSt (vm: LC3VirtualMachine) (instruction: uint16) =
         let r0 = LC3Bits.unpack9 instruction
         let r0Value = vm.ReadRegister(r0)
-        let offset = LC3Bits.signExtend (uint16 (int instruction &&& 0x1FF)) 9
+        let offset = LC3Bits.signExtend (instruction &&& 0x1FFus) 9
         vm.WriteMemory(vm.ProgramCounter + offset, r0Value)
 
     /// Opcode - Jump Register
     let inline evalOpJsr (vm: LC3VirtualMachine) (instruction: uint16) =
         vm.R7 <- vm.ProgramCounter
-
         if (LC3Bits.unpackLong instruction <> 0us) then
-            let offset = LC3Bits.signExtend (uint16 (int instruction &&& 0x7FF)) 11
+            let offset = LC3Bits.signExtend (instruction &&& 0x7FFus) 11
             vm.ProgramCounter <- vm.ProgramCounter + offset
         else 
             let r1 = LC3Bits.unpack6 instruction
@@ -174,7 +173,7 @@ module OpEvaluator =
         let r0 = LC3Bits.unpack9 instruction
         let r1 = LC3Bits.unpack6 instruction
         let r1Value = vm.ReadRegister(r1)
-        let offset = LC3Bits.signExtend (uint16 (int instruction &&& 0x3F)) 6
+        let offset = LC3Bits.signExtend (instruction &&& 0x3Fus) 6
         vm.WriteRegister(r0, vm.ReadMemory(r1Value + offset))
         vm.UpdateConditionFlags(r0)
 
@@ -196,13 +195,13 @@ module OpEvaluator =
         let r1 = LC3Bits.unpack6 instruction
         let r0Value = vm.ReadRegister(r0)
         let r1Value = vm.ReadRegister(r1)
-        let offset = LC3Bits.signExtend (uint16 (int instruction &&& 0x3F)) 6
+        let offset = LC3Bits.signExtend (instruction &&& 0x3Fus) 6
         vm.WriteMemory(r1Value + offset, r0Value)
 
     /// Opcode - Load Indirect
     let inline evalOpLdi (vm: LC3VirtualMachine) (instruction: uint16) =
         let r0 = LC3Bits.unpack9 instruction
-        let offset = LC3Bits.signExtend (uint16 (int instruction &&& 0x1FF)) 9
+        let offset = LC3Bits.signExtend (instruction &&& 0x1FFus) 9
         let pcValue = vm.ReadMemory(vm.ProgramCounter + offset)
         let memValue = vm.ReadMemory(pcValue)
         vm.WriteRegister(r0, memValue)
@@ -212,7 +211,7 @@ module OpEvaluator =
     let inline evalOpSti (vm: LC3VirtualMachine) (instruction: uint16) =
         let r0 = LC3Bits.unpack9 instruction
         let r0Value = vm.ReadRegister(r0)
-        let offset = LC3Bits.signExtend (uint16 (int instruction &&& 0x1FF)) 9
+        let offset = LC3Bits.signExtend (instruction &&& 0x1FFus) 9
         vm.WriteMemory(vm.ReadMemory(vm.ProgramCounter + offset), r0Value)
 
     /// Opcode - Jump
@@ -228,7 +227,7 @@ module OpEvaluator =
     /// Opcode - Load Effective Address
     let inline evalOpLea (vm: LC3VirtualMachine) (instruction: uint16) =
         let r0 = LC3Bits.unpack9 instruction
-        let offset = LC3Bits.signExtend (uint16 (int instruction &&& 0x1FF)) 9
+        let offset = LC3Bits.signExtend (instruction &&& 0x1FFus) 9
         vm.WriteRegister(r0, vm.ProgramCounter + offset)
         vm.UpdateConditionFlags(r0)
 
