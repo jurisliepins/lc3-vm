@@ -4,18 +4,14 @@ module LC3Bits =
     open System.IO
     open System
 
-    let inline unpackOp (instruction: uint16) = (instruction >>> 12)
-    
-    let inline unpackTrap (instruction: uint16) = (instruction &&& 0xFFus)
+    let inline unpackOp (instruction: uint16) = uint16 (int instruction >>> 12)
+    let inline unpackTrap (instruction: uint16) = uint16 (int instruction &&& 0xFF)
         
-    let inline unpack0 (instruction: uint16) = (instruction >>> 9) &&& 0x7us
+    let inline unpack9 (instruction: uint16) = uint16 ((int instruction >>> 9) &&& 0x7)
+    let inline unpack6 (instruction: uint16) = uint16 ((int instruction >>> 6) &&& 0x7)
+    let inline unpack0 (instruction: uint16) = uint16 ((int instruction &&& 0x7))
         
-    let inline unpack1 (instruction: uint16) = (instruction >>> 6) &&& 0x7us
-    
-    let inline unpack2 (instruction: uint16) = (instruction &&& 0x7us)
-        
-    let inline unpackImm (instruction: uint16) = (instruction >>> 5) &&& 0x1us
-    
+    let inline unpackImm (instruction: uint16) = uint16 ((int instruction >>> 5) &&& 0x1)
     let inline unpackLong (instruction: uint16) = uint16 ((int instruction >>> 11) &&& 1)
 
     let inline swapUInt16 (value: uint16) = (value <<< 8) ||| (value >>> 8)
@@ -24,8 +20,4 @@ module LC3Bits =
         if BitConverter.IsLittleEndian then reader.ReadUInt16() |> swapUInt16 else reader.ReadUInt16()
 
     let inline signExtend (value: uint16) (bitCount: int) = 
-        if ((value >>> (bitCount - 1)) &&& 1us) <> 0us then value ||| (0xFFFFus <<< bitCount) else value
-
-    let inline signExtend2 (value: int) (bitCount: int) : int = 
-        let signBit = 1 <<< (bitCount - 1)
-        (value &&& (signBit - 1)) - (value &&& signBit)
+        if ((int value >>> (bitCount - 1)) &&& 1) <> 0 then uint16 (int value ||| (0xFFFF <<< bitCount)) else value
