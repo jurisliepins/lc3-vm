@@ -110,7 +110,8 @@ module OpEvaluator =
             vm.ProgramCounter <- vm.ProgramCounter + offset
         else 
             let r1 = LC3Bits.unpack6 instruction
-            vm.ProgramCounter <- vm.ReadRegister(r1)
+            let r1Val = vm.ReadRegister(r1)
+            vm.ProgramCounter <- r1Val
 
     /// Opcode - And
     let inline evalOpAnd (vm: LC3VirtualMachine) (instruction: uint16) =
