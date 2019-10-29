@@ -34,7 +34,3 @@ module LC3VirtualRegisters =
             writeConditionFlag registers (uint16 ConditionFlagTypes.FL_NEG)
         else
             writeConditionFlag registers (uint16 ConditionFlagTypes.FL_POS)
-    (*
-    let rec dump (registers: Registers) print = 
-        print (sprintf "%A\n" registers)
-    *)

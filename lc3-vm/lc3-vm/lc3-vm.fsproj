@@ -13,7 +13,6 @@
     <Compile Include="LC3VirtualMemory.fs" />
     <Compile Include="LC3VirtualRegisters.fs" />
     <Compile Include="LC3VirtualMachine.fs" />
-    <Compile Include="LC3Disassembler.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>
 
