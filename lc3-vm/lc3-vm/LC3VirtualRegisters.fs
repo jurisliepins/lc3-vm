@@ -27,10 +27,10 @@ module LC3VirtualRegisters =
         registers.[int RegisterTypes.R_COND] <- value
 
     let inline updateConditionFlags (registers: Registers) (addr: uint16) =
-        let rValue = read registers addr
-        if (rValue = 0us) then
+        let rVal = read registers addr
+        if (rVal = 0us) then
             writeConditionFlag registers (uint16 ConditionFlagTypes.FL_ZRO)
-        else if ((rValue >>> 15) <> 0us) then
+        else if ((rVal >>> 15) <> 0us) then
             writeConditionFlag registers (uint16 ConditionFlagTypes.FL_NEG)
         else
             writeConditionFlag registers (uint16 ConditionFlagTypes.FL_POS)
