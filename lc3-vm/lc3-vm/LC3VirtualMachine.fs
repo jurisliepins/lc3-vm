@@ -27,7 +27,7 @@ type LC3VirtualMachine() =
 
     member public this.WriteMemory(addr: uint16, value: uint16) = LC3VirtualMemory.write memory addr value
 
-    member public this.UpdateConditionFlags(addr: uint16) = LC3VirtualRegisters.updateConditionFlags registers addr
+    member public this.UpdateConditionFlags(addr: uint16) = LC3VirtualRegisters.updateCondFlags registers addr
 
     member public this.R0
         with get() = this.ReadRegister(uint16 RegisterTypes.R_R0) and set(value: uint16) = this.WriteRegister(uint16 RegisterTypes.R_R0, value)
@@ -54,16 +54,13 @@ type LC3VirtualMachine() =
         with get() = this.ReadRegister(uint16 RegisterTypes.R_R7) and set(value: uint16) = this.WriteRegister(uint16 RegisterTypes.R_R7, value)
 
     member public this.ProgramCounter 
-        with get() = LC3VirtualRegisters.readProgramCounter registers and set(value: uint16) = LC3VirtualRegisters.writeProgramCounter registers value
+        with get() = LC3VirtualRegisters.readPc registers and set(value: uint16) = LC3VirtualRegisters.writePc registers value
 
     member public this.ProgramCounterWithIncrement 
-        with get() = LC3VirtualRegisters.readProgramCounterWithIncerement registers
+        with get() = LC3VirtualRegisters.readPcWithIncr registers
 
     member public this.ConditionFlag 
-        with get() = LC3VirtualRegisters.readConditionFlag registers and set(value: uint16) = LC3VirtualRegisters.writeConditionFlag registers value
-
-    member public this.IsProgramCounterEnd
-        with get() = this.ProgramCounter = uint16 memory.Length
+        with get() = LC3VirtualRegisters.readCondFlag registers and set(value: uint16) = LC3VirtualRegisters.writeCondFlag registers value
 
 module OpEvaluator = 
     /// Opcode - Branch
