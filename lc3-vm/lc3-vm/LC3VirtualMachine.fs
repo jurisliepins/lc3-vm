@@ -233,7 +233,7 @@ module TrapEvaluator =
         Console.Out.Flush()
 
 module LC3VirtualMachine =
-    let debug (str: string) = Console.Write(str)
+    let debug (str: string) = Console.Write str
     
     let load (vm: LC3VirtualMachine) (path: string) =       
         use reader = new BinaryReader(File.Open(path, FileMode.Open, FileAccess.Read, FileShare.Read))
@@ -253,21 +253,21 @@ module LC3VirtualMachine =
         let instruction = vm.ReadMemory(vm.ProgramCounterWithIncrement)
 
         match (enum<OpcodeTypes> (int (LC3Bits.unpackOp instruction))) with 
-        | OpcodeTypes.OP_BR   -> (*debug ("OP_BR  \n");*) evalOpBr  vm instruction 
-        | OpcodeTypes.OP_ADD  -> (*debug ("OP_ADD \n");*) evalOpAdd vm instruction
-        | OpcodeTypes.OP_LD   -> (*debug ("OP_LD  \n");*) evalOpLd  vm instruction
-        | OpcodeTypes.OP_ST   -> (*debug ("OP_ST  \n");*) evalOpSt  vm instruction
-        | OpcodeTypes.OP_JSR  -> (*debug ("OP_JSR \n");*) evalOpJsr vm instruction
-        | OpcodeTypes.OP_AND  -> (*debug ("OP_AND \n");*) evalOpAnd vm instruction
-        | OpcodeTypes.OP_LDR  -> (*debug ("OP_LDR \n");*) evalOpLdr vm instruction
-        | OpcodeTypes.OP_STR  -> (*debug ("OP_STR \n");*) evalOpStr vm instruction
-        | OpcodeTypes.OP_RTI  -> (*debug ("OP_RTI \n");*) evalOpRti vm instruction
-        | OpcodeTypes.OP_NOT  -> (*debug ("OP_NOT \n");*) evalOpNot vm instruction
-        | OpcodeTypes.OP_LDI  -> (*debug ("OP_LDI \n");*) evalOpLdi vm instruction
-        | OpcodeTypes.OP_STI  -> (*debug ("OP_STI \n");*) evalOpSti vm instruction
-        | OpcodeTypes.OP_JMP  -> (*debug ("OP_JMP \n");*) evalOpJmp vm instruction
-        | OpcodeTypes.OP_RES  -> (*debug ("OP_RES \n");*) evalOpRes vm instruction
-        | OpcodeTypes.OP_LEA  -> (*debug ("OP_LEA \n");*) evalOpLea vm instruction
+        | OpcodeTypes.OP_BR   -> evalOpBr  vm instruction 
+        | OpcodeTypes.OP_ADD  -> evalOpAdd vm instruction
+        | OpcodeTypes.OP_LD   -> evalOpLd  vm instruction
+        | OpcodeTypes.OP_ST   -> evalOpSt  vm instruction
+        | OpcodeTypes.OP_JSR  -> evalOpJsr vm instruction
+        | OpcodeTypes.OP_AND  -> evalOpAnd vm instruction
+        | OpcodeTypes.OP_LDR  -> evalOpLdr vm instruction
+        | OpcodeTypes.OP_STR  -> evalOpStr vm instruction
+        | OpcodeTypes.OP_RTI  -> evalOpRti vm instruction
+        | OpcodeTypes.OP_NOT  -> evalOpNot vm instruction
+        | OpcodeTypes.OP_LDI  -> evalOpLdi vm instruction
+        | OpcodeTypes.OP_STI  -> evalOpSti vm instruction
+        | OpcodeTypes.OP_JMP  -> evalOpJmp vm instruction
+        | OpcodeTypes.OP_RES  -> evalOpRes vm instruction
+        | OpcodeTypes.OP_LEA  -> evalOpLea vm instruction
         | OpcodeTypes.OP_TRAP -> evalOpTrap vm instruction
         | unknownCode ->
             raise (unknownOpcodeException (unknownCode.ToString()))
@@ -288,11 +288,11 @@ module LC3VirtualMachine =
     and evalOpLea  (vm: LC3VirtualMachine) (instruction: uint16) = OpEvaluator.evalOpLea vm instruction; eval vm
     and evalOpTrap (vm: LC3VirtualMachine) (instruction: uint16) =
         match (enum<TrapcodeTypes> (int (LC3Bits.unpackTrap instruction))) with 
-        | TrapcodeTypes.TRAP_GETC  -> (*debug ("TRAP_GETC \n")*) TrapEvaluator.evalOpTrapGetc  vm instruction; eval vm
-        | TrapcodeTypes.TRAP_OUT   -> (*debug ("TRAP_OUT  \n")*) TrapEvaluator.evalOpTrapOut   vm instruction; eval vm
-        | TrapcodeTypes.TRAP_PUTS  -> (*debug ("TRAP_PUTS \n")*) TrapEvaluator.evalOpTrapPuts  vm instruction; eval vm
-        | TrapcodeTypes.TRAP_IN    -> (*debug ("TRAP_IN   \n")*) TrapEvaluator.evalOpTrapIn    vm instruction; eval vm
-        | TrapcodeTypes.TRAP_PUTSP -> (*debug ("TRAP_PUTSP\n")*) TrapEvaluator.evalOpTrapPutsp vm instruction; eval vm
-        | TrapcodeTypes.TRAP_HALT  -> (*debug ("TRAP_HALT \n")*) TrapEvaluator.evalOpTrapHalt  vm instruction;
+        | TrapcodeTypes.TRAP_GETC  -> TrapEvaluator.evalOpTrapGetc  vm instruction; eval vm
+        | TrapcodeTypes.TRAP_OUT   -> TrapEvaluator.evalOpTrapOut   vm instruction; eval vm
+        | TrapcodeTypes.TRAP_PUTS  -> TrapEvaluator.evalOpTrapPuts  vm instruction; eval vm
+        | TrapcodeTypes.TRAP_IN    -> TrapEvaluator.evalOpTrapIn    vm instruction; eval vm
+        | TrapcodeTypes.TRAP_PUTSP -> TrapEvaluator.evalOpTrapPutsp vm instruction; eval vm
+        | TrapcodeTypes.TRAP_HALT  -> TrapEvaluator.evalOpTrapHalt  vm instruction;
         | unknownCode -> 
             raise (unknownTrapcodeException (unknownCode.ToString()))
