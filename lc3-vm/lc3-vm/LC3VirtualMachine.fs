@@ -253,21 +253,21 @@ module LC3VirtualMachine =
         let instruction = vm.ReadMemory(vm.ProgramCounterWithIncrement)
 
         match (enum<OpcodeTypes> (int (LC3Bits.unpackOp instruction))) with 
-        | OpcodeTypes.OP_BR   -> evalOpBr  vm instruction 
-        | OpcodeTypes.OP_ADD  -> evalOpAdd vm instruction
-        | OpcodeTypes.OP_LD   -> evalOpLd  vm instruction
-        | OpcodeTypes.OP_ST   -> evalOpSt  vm instruction
-        | OpcodeTypes.OP_JSR  -> evalOpJsr vm instruction
-        | OpcodeTypes.OP_AND  -> evalOpAnd vm instruction
-        | OpcodeTypes.OP_LDR  -> evalOpLdr vm instruction
-        | OpcodeTypes.OP_STR  -> evalOpStr vm instruction
-        | OpcodeTypes.OP_RTI  -> evalOpRti vm instruction
-        | OpcodeTypes.OP_NOT  -> evalOpNot vm instruction
-        | OpcodeTypes.OP_LDI  -> evalOpLdi vm instruction
-        | OpcodeTypes.OP_STI  -> evalOpSti vm instruction
-        | OpcodeTypes.OP_JMP  -> evalOpJmp vm instruction
-        | OpcodeTypes.OP_RES  -> evalOpRes vm instruction
-        | OpcodeTypes.OP_LEA  -> evalOpLea vm instruction
+        | OpcodeTypes.OP_BR   -> evalOpBr   vm instruction 
+        | OpcodeTypes.OP_ADD  -> evalOpAdd  vm instruction
+        | OpcodeTypes.OP_LD   -> evalOpLd   vm instruction
+        | OpcodeTypes.OP_ST   -> evalOpSt   vm instruction
+        | OpcodeTypes.OP_JSR  -> evalOpJsr  vm instruction
+        | OpcodeTypes.OP_AND  -> evalOpAnd  vm instruction
+        | OpcodeTypes.OP_LDR  -> evalOpLdr  vm instruction
+        | OpcodeTypes.OP_STR  -> evalOpStr  vm instruction
+        | OpcodeTypes.OP_RTI  -> evalOpRti  vm instruction
+        | OpcodeTypes.OP_NOT  -> evalOpNot  vm instruction
+        | OpcodeTypes.OP_LDI  -> evalOpLdi  vm instruction
+        | OpcodeTypes.OP_STI  -> evalOpSti  vm instruction
+        | OpcodeTypes.OP_JMP  -> evalOpJmp  vm instruction
+        | OpcodeTypes.OP_RES  -> evalOpRes  vm instruction
+        | OpcodeTypes.OP_LEA  -> evalOpLea  vm instruction
         | OpcodeTypes.OP_TRAP -> evalOpTrap vm instruction
         | unknownCode ->
             raise (unknownOpcodeException (unknownCode.ToString()))
