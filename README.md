@@ -10,4 +10,4 @@ To run the vm, build in Release configuration (Debug will throw a StackOverflowE
 .\lc3-vm.exe .\2048.obj
 ```
 
-Some of the programs that can be ran are [2048](https://github.com/rpendleton/lc3-2048) and [Rogue](https://github.com/justinmeiners/lc3-rogue)
+Some of the programs that can be ran are [2048](https://github.com/rpendleton/lc3-2048) and [Rogue](https://github.com/justinmeiners/lc3-rogue). 
