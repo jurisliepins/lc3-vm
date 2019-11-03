@@ -1,6 +1,6 @@
 # lc3-vm
 
-F# implmenetation of [LC3 VM](https://en.wikipedia.org/wiki/Little_Computer_3), based on [this](https://justinmeiners.github.io/lc3-vm/) tutorial.
+F# implmenetation of [LC3 VM](https://en.wikipedia.org/wiki/Little_Computer_3) ([Instruction Set Architecture](https://justinmeiners.github.io/lc3-vm/supplies/lc3-isa.pdf)), based on [this](https://justinmeiners.github.io/lc3-vm/) tutorial.
 
 ## Running
 
