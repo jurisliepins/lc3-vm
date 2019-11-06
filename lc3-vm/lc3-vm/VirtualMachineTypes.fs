@@ -1,6 +1,6 @@
 ﻿namespace lc3vm
 
-module LC3VirtualMachineTypes =
+module VirtualMachineTypes =
     type RegisterTypes = 
         | R_R0    = 0
         | R_R1    = 1

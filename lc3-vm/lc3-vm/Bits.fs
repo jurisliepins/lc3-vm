@@ -1,6 +1,6 @@
 ﻿namespace lc3vm
 
-module LC3Bits =
+module Bits =
     open System.IO
     open System
 
