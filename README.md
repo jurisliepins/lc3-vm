@@ -24,6 +24,6 @@ Call
 ./src/bin/Release/netcoreapp3.1/lc3-vm.exe -p ./binaries/2048.obj
 ```
 
-to execute one of the binaries (Use `WSL` terminal ).
+to execute one of the binaries (Use `WSL` terminal if you have access to it).
 
 Binaries that can be ran are in the `binaries` folder. The 2 programs are - [2048](https://github.com/rpendleton/lc3-2048) and [Rogue](https://github.com/justinmeiners/lc3-rogue). 

@@ -328,6 +328,5 @@ ASALocalRun/
 
 # MFractors (Xamarin productivity tool) working folder 
 .mfractor/
-/lc3-vm/.ionide
 
 .ionide
