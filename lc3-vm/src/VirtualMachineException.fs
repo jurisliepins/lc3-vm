@@ -1,4 +1,4 @@
-﻿namespace lc3vm
+﻿namespace lc3_vm
 
 module VirtualMachineException =
     exception VirtualMachineException of string

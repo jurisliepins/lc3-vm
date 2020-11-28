@@ -1,9 +1,9 @@
-﻿namespace lc3vm
+﻿namespace lc3_vm
 
 open System.IO
 open System
-open lc3vm.VirtualMachineException
-open lc3vm.VirtualMachineTypes
+open lc3_vm.VirtualMachineException
+open lc3_vm.VirtualMachineTypes
 
 type LC3VirtualMachine() =
     let (memory, registers): VirtualMachine = 
