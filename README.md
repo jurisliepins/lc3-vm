@@ -2,14 +2,14 @@
 
 F# implmenetation of [LC3 VM](https://en.wikipedia.org/wiki/Little_Computer_3) ([Instruction Set Architecture](https://justinmeiners.github.io/lc3-vm/supplies/lc3-isa.pdf)), based on [this](https://justinmeiners.github.io/lc3-vm/) tutorial.
 
-![](https://media.giphy.com/media/4Y8UNE1QIQWqaqinQn/source.gif)
+![](https://media.giphy.com/media/XtWpGgwMNpyzbo6vh9/source.gif)
 
 ## Building
 
 From project root call 
 
 ```
-dotnet build -c Release .\src\
+dotnet build -c Release .\src\LC3VirtualMachine\
 ```
 
 to build in `Release` configuration (`Debug` will throw a StackOverflowException since tail recursion optimisations are not performed during compilation).
@@ -21,7 +21,7 @@ Call
 
 
 ```
-./src/bin/Release/netcoreapp3.1/lc3-vm.exe -p ./binaries/2048.obj
+./src/LC3VirtualMachine/bin/Release/netcoreapp3.1/LC3VirtualMachine.exe -p ./exec/2048.obj
 ```
 
 to execute one of the binaries (Use `WSL` terminal if you have access to it).

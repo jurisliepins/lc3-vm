@@ -1,8 +1,8 @@
-﻿namespace LC3VM
+﻿namespace LC3VirtualMachine
 
 module VirtualMemory =
     open System
-    open LC3VM.VirtualMachineTypes
+    open LC3VirtualMachine.VirtualMachineTypes
 
     let inline read (memory: Memory) (addr: uint16) = 
         if ((enum<MemoryMappedRegisterTypes> (int addr)) = MemoryMappedRegisterTypes.MR_KBSR) then

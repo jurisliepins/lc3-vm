@@ -1,7 +1,7 @@
-﻿namespace LC3VM
+﻿namespace LC3VirtualMachine
 
 module VirtualRegisters =
-    open LC3VM.VirtualMachineTypes
+    open LC3VirtualMachine.VirtualMachineTypes
 
     let inline read (registers: Registers) (addr: uint16) = 
         registers.[int addr]
