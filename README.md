@@ -1,4 +1,4 @@
-# lc3-vm
+# Little Computer 3 Virtual Machine
 
 F# implmenetation of [LC3 VM](https://en.wikipedia.org/wiki/Little_Computer_3) ([Instruction Set Architecture](https://justinmeiners.github.io/lc3-vm/supplies/lc3-isa.pdf)), based on [this](https://justinmeiners.github.io/lc3-vm/) tutorial.
 
