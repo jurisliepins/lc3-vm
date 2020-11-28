@@ -1,4 +1,4 @@
-﻿open lc3_vm
+﻿open LC3VM
 
 let parseCommandLinePath (args: string[]) = if (args.Length < 1) then None else Some (args |> Array.toList)
 
