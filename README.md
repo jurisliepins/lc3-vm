@@ -1,12 +1,14 @@
 # Little Computer 3 Virtual Machine
 
-F# implmenetation of [LC3 VM](https://en.wikipedia.org/wiki/Little_Computer_3) ([Instruction Set Architecture](https://justinmeiners.github.io/lc3-vm/supplies/lc3-isa.pdf)). Based on [this](https://justinmeiners.github.io/lc3-vm/) tutorial.
+F# implmenetation of [LC3 VM](https://en.wikipedia.org/wiki/Little_Computer_3) ([Instruction Set Architecture](https://justinmeiners.github.io/lc3-vm/supplies/lc3-isa.pdf)), based on [this](https://justinmeiners.github.io/lc3-vm/) tutorial.
 
 ![](https://media.giphy.com/media/EDyebUFw2Yqq05iwcV/source.gif)
 
 ## Building
 
-From project root call `dotnet build -c Release .\src\LC3VirtualMachine\` to build in `Release` configuration (`Debug` will throw a StackOverflowException since tail recursion optimisations are not performed during compilation).
+From project root call `dotnet build -c Release .\src\LC3VirtualMachine\` to build. 
+
+Building in `Release` configuration - `Debug` will throw a StackOverflowException since tail recursion optimisations are not performed during compilation.
 
 
 ## Running
