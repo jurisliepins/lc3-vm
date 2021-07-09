@@ -6,13 +6,12 @@ open LC3VirtualMachine.VirtualMachineException
 open LC3VirtualMachine.VirtualMachineTypes
 
 type LC3VirtualMachine() =
-    let (memory, registers): VirtualMachine = 
-        VirtualMachineTypes.VirtualMachine(
-            Array.zeroCreate (int UInt16.MaxValue), 
-            Array.zeroCreate (int RegisterTypes.R_COUNT))
+    let memory, registers: VirtualMachine = createVirtualMachine ()
 
-    member public this.VirtualMachine with get(): VirtualMachine = (memory, registers)
-
+    member public this.Memory with get() = memory
+    
+    member public this.Registers with get() = registers
+    
     member public this.ReadRegister (addr: uint16) = VirtualRegisters.read registers addr
 
     member public this.WriteRegister(addr: uint16, value: uint16) = VirtualRegisters.write registers addr value
@@ -229,18 +228,14 @@ module TrapEvaluator =
         Console.Out.Flush()
 
 module LC3VirtualMachine =
-    let debug (str: string) = Console.Write str
-    
     let load (vm: LC3VirtualMachine) (path: string) =       
         use reader = new BinaryReader(File.Open(path, FileMode.Open, FileAccess.Read, FileShare.Read))
         
         let mutable originPtr = Bits.readUInt16 reader
         let mutable memoryPtr = originPtr
 
-        let memory, _ = vm.VirtualMachine;
-
         while ((reader.BaseStream.Position <> reader.BaseStream.Length) && (memoryPtr < UInt16.MaxValue)) do
-            VirtualMemory.writeDirect memory memoryPtr (Bits.readUInt16 reader)
+            VirtualMemory.writeDirect vm.Memory memoryPtr (Bits.readUInt16 reader)
             memoryPtr <- memoryPtr + 1us
         
         (originPtr, memoryPtr)

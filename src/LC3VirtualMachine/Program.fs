@@ -1,6 +1,6 @@
 ﻿open LC3VirtualMachine
 
-let parseCommandLinePath (args: string[]) = if (args.Length < 1) then None else Some (args |> Array.toList)
+let parseCommandLineArgs (args: string[]) = if (args.Length < 1) then None else Some (args |> Array.toList)
 
 let printUsage () = 
     printfn "Usage: lc3-vm [command] [command-option]"
@@ -13,7 +13,7 @@ let printUsage () =
 [<EntryPoint>]
 let main argv =
     try
-        match parseCommandLinePath argv with
+        match parseCommandLineArgs argv with
         | Some (command::commandOptions) ->
             match (command::commandOptions) with
             | ("-h"::_)    | ("--help"::_) -> printUsage ()
