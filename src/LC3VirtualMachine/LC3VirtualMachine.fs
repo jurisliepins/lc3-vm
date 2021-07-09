@@ -9,11 +9,7 @@ type LC3VirtualMachine() =
     let (memory, registers): VirtualMachine = 
         VirtualMachineTypes.VirtualMachine(
             Array.zeroCreate (int UInt16.MaxValue), 
-            Array.zeroCreate (int VirtualMachineTypes.RegisterTypes.R_COUNT))
-
-    static let instance = LC3VirtualMachine()
-
-    static member public Instance with get() = instance
+            Array.zeroCreate (int RegisterTypes.R_COUNT))
 
     member public this.VirtualMachine with get(): VirtualMachine = (memory, registers)
 
@@ -25,7 +21,7 @@ type LC3VirtualMachine() =
     
     member public this.ReadMemoryDirect(addr: uint16) = VirtualMemory.readDirect memory addr
 
-    member public this.WriteMemory(addr: uint16, value: uint16) = VirtualMemory.write memory addr value
+    member public this.WriteMemory(addr: uint16, value: uint16) = VirtualMemory.writeDirect memory addr value
 
     member public this.UpdateConditionFlags(addr: uint16) = VirtualRegisters.updateCondFlags registers addr
 
@@ -244,7 +240,7 @@ module LC3VirtualMachine =
         let memory, _ = vm.VirtualMachine;
 
         while ((reader.BaseStream.Position <> reader.BaseStream.Length) && (memoryPtr < UInt16.MaxValue)) do
-            VirtualMemory.write memory memoryPtr (Bits.readUInt16 reader)
+            VirtualMemory.writeDirect memory memoryPtr (Bits.readUInt16 reader)
             memoryPtr <- memoryPtr + 1us
         
         (originPtr, memoryPtr)

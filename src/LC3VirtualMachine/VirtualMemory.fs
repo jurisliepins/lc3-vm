@@ -13,8 +13,6 @@ module VirtualMemory =
                 memory.[int MemoryMappedRegisterTypes.MR_KBSR] <- 0us
         memory.[int addr]
 
-    let inline readDirect (memory: Memory) (addr: uint16) = 
-        memory.[int addr]
+    let inline readDirect (memory: Memory) (addr: uint16) = memory.[int addr]
     
-    let inline write (memory: Memory) (addr: uint16) (value: uint16) = 
-        memory.[int addr] <- value
+    let inline writeDirect (memory: Memory) (addr: uint16) (value: uint16) = memory.[int addr] <- value

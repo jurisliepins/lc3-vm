@@ -16,12 +16,13 @@ let main argv =
         match parseCommandLinePath argv with
         | Some (command::commandOptions) ->
             match (command::commandOptions) with
-            | ("-h"::_) | ("--help"::_) -> printUsage ()
-            | ("-p"::path) | ("--path"::path) -> 
-                LC3VirtualMachine.Instance.ProgramCounter <- 0x3000us
+            | ("-h"::_)    | ("--help"::_) -> printUsage ()
+            | ("-p"::path) | ("--path"::path) ->
+                let vm = LC3VirtualMachine()
+                vm.ProgramCounter <- 0x3000us
                 
-                LC3VirtualMachine.load LC3VirtualMachine.Instance (List.head path) |> ignore
-                LC3VirtualMachine.eval LC3VirtualMachine.Instance
+                LC3VirtualMachine.load vm (List.head path) |> ignore
+                LC3VirtualMachine.eval vm
             | _ -> 
                 printUsage ()
         | Some ([])
