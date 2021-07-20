@@ -5,6 +5,7 @@
     <TargetFramework>netcoreapp3.1</TargetFramework>
     <RootNamespace>LC3VirtualMachine</RootNamespace>
     <LangVersion>default</LangVersion>
+    <AssemblyName>lc3-vm</AssemblyName>
   </PropertyGroup>
 
   <ItemGroup>

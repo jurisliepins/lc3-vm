@@ -13,6 +13,6 @@ Building in `Release` configuration. `Debug` will throw a StackOverflowException
 
 ## Running
 
-Call `./src/LC3VirtualMachine/bin/Release/netcoreapp3.1/LC3VirtualMachine.exe -p ./exec/2048.obj` to execute one of the binaries (Use `WSL` terminal if you have access to it).
+Call `./src/LC3VirtualMachine/bin/Release/netcoreapp3.1/lc3-vm.exe -p ./exec/2048.obj` to execute one of the binaries (Use `WSL` terminal if you have access to it).
 
 Executable binaries are in the `exec` folder. The 2 programs are [2048](https://github.com/rpendleton/lc3-2048) and [Rogue](https://github.com/justinmeiners/lc3-rogue). 
