@@ -1,36 +1,31 @@
 ﻿namespace LC3VirtualMachine
 
+open VirtualMachineTypes
+
 module VirtualRegisters =
-    open LC3VirtualMachine.VirtualMachineTypes
 
-    let inline read (registers: Registers) (addr: uint16) = 
-        registers.[int addr]
+    let read (registers: Registers) (address: uint16): uint16 = registers.[int address]
 
-    let inline write (registers: Registers) (addr: uint16) (value: uint16) = 
-        registers.[int addr] <- value
+    let write (registers: Registers) (address: uint16) (value: uint16): unit = registers.[int address] <- value
 
-    let inline readPc (registers: Registers) = 
-        registers.[int RegisterTypes.R_PC]
+    let readProgramCounter (registers: Registers): uint16 = registers.[int RegisterTypes.R_PC]
 
-    let inline writePc (registers: Registers) (value: uint16) = 
-        registers.[int RegisterTypes.R_PC] <- value
+    let writeProgramCounter (registers: Registers) (value: uint16): unit = registers.[int RegisterTypes.R_PC] <- value
 
-    let inline readPcWithIncr (registers: Registers) =
-        let pc = readPc registers
-        writePc registers (pc + 1us)
+    let readProgramCounterWithIncrement (registers: Registers) =
+        let pc = readProgramCounter registers
+        writeProgramCounter registers (pc + 1us)
         pc
 
-    let inline readCondFlag (registers: Registers) = 
-        registers.[int RegisterTypes.R_COND]
+    let readConditionFlag (registers: Registers): uint16 = registers.[int RegisterTypes.R_COND]
 
-    let inline writeCondFlag (registers: Registers) (value: uint16) = 
-        registers.[int RegisterTypes.R_COND] <- value
+    let writeConditionFlag (registers: Registers) (value: uint16): unit = registers.[int RegisterTypes.R_COND] <- value
 
-    let inline updateCondFlags (registers: Registers) (addr: uint16) =
-        let rVal = read registers addr
+    let updateConditionFlags (registers: Registers) (address: uint16) =
+        let rVal = read registers address
         if (rVal = 0us) then
-            writeCondFlag registers (uint16 ConditionFlagTypes.FL_ZRO)
+            writeConditionFlag registers (uint16 ConditionFlagTypes.FL_ZRO)
         else if ((rVal >>> 15) <> 0us) then
-            writeCondFlag registers (uint16 ConditionFlagTypes.FL_NEG)
+            writeConditionFlag registers (uint16 ConditionFlagTypes.FL_NEG)
         else
-            writeCondFlag registers (uint16 ConditionFlagTypes.FL_POS)
+            writeConditionFlag registers (uint16 ConditionFlagTypes.FL_POS)

@@ -9,12 +9,13 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Include="VirtualMachineException.fs" />
-    <Compile Include="VirtualMachineTypes.fs" />
+    <Compile Include="Exceptions.fs" />
+    <Compile Include="Types.fs" />
     <Compile Include="Bits.fs" />
     <Compile Include="VirtualMemory.fs" />
     <Compile Include="VirtualRegisters.fs" />
-    <Compile Include="LC3VirtualMachine.fs" />
+    <Compile Include="VirtualMachine.fs" />
+    <Compile Include="VirtualEvaluator.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>
 
