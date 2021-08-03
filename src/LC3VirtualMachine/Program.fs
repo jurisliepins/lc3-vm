@@ -26,7 +26,10 @@ module Program =
             | "-p"::path::_ | "--path"::path::_ ->
                 try
                     let vm = VirtualMachine(0x3000us)
-                    VirtualEvaluator.load vm (new BinaryReader(File.Open(path, FileMode.Open, FileAccess.Read, FileShare.Read))) |> ignore
+                    VirtualEvaluator.load vm
+                            (new BinaryReader(
+                                File.Open(path, FileMode.Open, FileAccess.Read, FileShare.Read))
+                            ) |> ignore
                     VirtualEvaluator.eval vm 
                 with ex -> printfn $"%A{ex}"
             | _ -> printUsage ()
