@@ -2,17 +2,16 @@
 
 F# implmenetation of [LC3 VM](https://en.wikipedia.org/wiki/Little_Computer_3) ([Instruction Set Architecture](https://justinmeiners.github.io/lc3-vm/supplies/lc3-isa.pdf)) based on [this](https://justinmeiners.github.io/lc3-vm/) tutorial.
 
-![](https://media.giphy.com/media/EDyebUFw2Yqq05iwcV/source.gif)
+[![lc3-vm.gif](https://s8.gifyu.com/images/lc3-vm.gif)](https://gifyu.com/image/S2MBX)
 
 ## Building
 
-From project root call `dotnet build -c Release .\src\LC3VirtualMachine\` to build. 
-
-Building in `Release` configuration. `Debug` will throw a StackOverflowException since tail recursion optimisations are not performed during compilation.
-
+From project root run `make`. 
 
 ## Running
 
-Call `./src/LC3VirtualMachine/bin/Release/netcoreapp3.1/lc3-vm.exe -p ./exec/2048.obj` to execute one of the binaries (Use `WSL` terminal if you have access to it).
+From project root run `.\src\LC3VirtualMachine\bin\Release\net6.0\win-x64\lc3-vm.exe -p .\exe\2048.obj`.
 
-Executable binaries are in the `exec` folder. The 2 programs are [2048](https://github.com/rpendleton/lc3-2048) and [Rogue](https://github.com/justinmeiners/lc3-rogue). 
+## Exe
+
+Executable binaries are in the `exe` folder. The 2 programs are [2048](https://github.com/rpendleton/lc3-2048) and [Rogue](https://github.com/justinmeiners/lc3-rogue). 
