@@ -31,7 +31,8 @@ module Program =
                                 File.Open(path, FileMode.Open, FileAccess.Read, FileShare.Read))
                             ) |> ignore
                     VirtualEvaluator.eval vm 
-                with ex -> printfn $"%A{ex}"
+                with
+                    ex -> printfn $"%A{ex}"
             | _ -> printUsage ()
         | _ -> printUsage ()
         0

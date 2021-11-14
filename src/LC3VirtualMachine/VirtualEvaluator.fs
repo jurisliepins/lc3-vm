@@ -187,7 +187,6 @@ module VirtualEvaluator =
 
     let rec eval (vm: VirtualMachine): unit =
         let instruction = vm.ReadMemoryInstruction(vm.ProgramCounterWithIncrement)
-
         match (enum<OpCodeTypes> (int (Bits.unpackOp instruction))) with 
         | OpCodeTypes.OP_BR   -> evalOpBr   vm instruction 
         | OpCodeTypes.OP_ADD  -> evalOpAdd  vm instruction
