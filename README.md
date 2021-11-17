@@ -4,16 +4,16 @@ F# implementation of [LC3 VM](https://en.wikipedia.org/wiki/Little_Computer_3) (
 
 [![lc3-vm.gif](https://s8.gifyu.com/images/lc3-vm.gif)](https://gifyu.com/image/S2MBX)
 
-## Building
+## Usage
 
-From project root run `make`. 
+### Building
 
-## Running
+From project root run `make`. Alternatively you can build the project yourself from cmd (see Makefile for examples commends) or from an IDE.
 
-On windows, from project root run `.\src\LC3VirtualMachine\bin\Release\net6.0\win-x64\lc3-vm.exe -p .\exe\2048.obj`.
+Makefile is configured to compile a self contained single binary.
 
-On linux, from project root run `.\src\LC3VirtualMachine\bin\Release\net6.0\linux-x64\lc3-vm -p .\exe\2048.obj`.
+### Running
 
-## Exe
+From project root run `.\src\LC3VirtualMachine\bin\Release\net6.0\win-x64\lc3-vm.exe -p .\exe\2048.obj` to play 2048. A linux-x64 binary will also be compiled in the linux-64 folder.
 
 Executable binaries are in the `exe` folder. The 2 programs are [2048](https://github.com/rpendleton/lc3-2048) and [Rogue](https://github.com/justinmeiners/lc3-rogue). 
