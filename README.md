@@ -2,8 +2,6 @@
 
 F# implementation of [LC3 VM](https://en.wikipedia.org/wiki/Little_Computer_3) ([Instruction Set Architecture](https://justinmeiners.github.io/lc3-vm/supplies/lc3-isa.pdf)) based on [this](https://justinmeiners.github.io/lc3-vm/) tutorial.
 
-[![lc3-vm.gif](https://s8.gifyu.com/images/lc3-vm.gif)](https://gifyu.com/image/S2MBX)
-
 ## Usage
 
 ### Building
